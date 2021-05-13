@@ -1,0 +1,33 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1620079871630.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "B5AD2EB3",
+    "lastKnownWriteTime" : 15481402895564892,
+    "last_content_update" : 1620079871630,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "5438D7A8",
+        "caption" : "germ_control",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=germ_control&cache_key=5438D7A8",
+        "displayedObservations" : "50",
+        "environment" : "",
+        "expression" : "germ_control",
+        "object" : "germ_control",
+        "preview" : "0",
+        "totalObservations" : "50",
+        "variables" : "1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 13,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

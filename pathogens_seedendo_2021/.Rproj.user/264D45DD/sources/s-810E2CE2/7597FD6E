@@ -1,0 +1,33 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1620321019775.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "7597FD6E",
+    "lastKnownWriteTime" : 8389754676516450921,
+    "last_content_update" : 1620321019775,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "B6C4617C",
+        "caption" : "Idaho2018.clear",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=Idaho2018.clear&cache_key=B6C4617C",
+        "displayedObservations" : 1260,
+        "environment" : "",
+        "expression" : "Idaho2018.clear",
+        "object" : "Idaho2018.clear",
+        "preview" : 0,
+        "totalObservations" : 1260,
+        "variables" : 18
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 8,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

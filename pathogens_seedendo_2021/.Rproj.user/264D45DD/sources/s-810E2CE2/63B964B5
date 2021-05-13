@@ -1,0 +1,33 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1620323633276.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "63B964B5",
+    "lastKnownWriteTime" : 4189037521560761441,
+    "last_content_update" : 1620323633276,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "72F3C177",
+        "caption" : "microbes_perseed_percent",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=microbes_perseed_percent&cache_key=72F3C177",
+        "displayedObservations" : "4",
+        "environment" : "",
+        "expression" : "microbes_perseed_percent",
+        "object" : "microbes_perseed_percent",
+        "preview" : "0",
+        "totalObservations" : "4",
+        "variables" : "4"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

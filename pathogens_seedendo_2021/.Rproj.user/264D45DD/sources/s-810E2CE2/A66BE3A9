@@ -1,0 +1,33 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1620331362639.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "A66BE3A9",
+    "lastKnownWriteTime" : 8390891570261009006,
+    "last_content_update" : 1620331362639,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "D107AC0F",
+        "caption" : "mort",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=mort&cache_key=D107AC0F",
+        "displayedObservations" : 99,
+        "environment" : "",
+        "expression" : "mort",
+        "object" : "mort",
+        "preview" : 0,
+        "totalObservations" : 99,
+        "variables" : 2
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 16,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}

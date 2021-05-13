@@ -1,0 +1,348 @@
+library(tidyverse)
+library(magrittr)
+#library(RColorBrewer)
+library(pals)
+library(cowplot)
+library(ggpubr)
+#library(gridExtra)
+#library(grid)
+#library(png)
+library(ggmap)
+library(ggrepel)
+
+mydata <- read.csv("data/bac_fun_data_resub.csv", header = T, as.is = T)
+
+mydata_byloc <- mydata %>%
+  mutate(Location = replace(Location, Location == "Nez Perce " | Location == "Nez Perce", "Moscow")) %>%
+  mutate(sampling_effort_location = paste(Dataset, Location, sep = "_"))
+
+
+Oregon2017 <- subset(mydata_byloc, sampling_effort_location == 'Oregon2017_Westport')
+Idaho2017 <- subset(mydata_byloc, sampling_effort_location == 'Idaho2017_Moscow')
+Idaho2018.clear <- subset(mydata_byloc, sampling_effort_location == 'Idaho2018_Clearwater')
+Idaho2018.mos <- subset(mydata_byloc, sampling_effort_location == 'Idaho2018_Moscow')
+
+trees <- Idaho2018.clear %>% 
+  group_by(Tree) %>%
+  summarise()
+
+#### There were 0, 1, or 2 microbes isolated per seed (Oregon 2017, Idaho 2017 and 2018) ####
+summary_data <- function(data){
+  data %>%
+    summarise(
+      zero_microbe = sum(Zero),
+      one_microbe = sum(One),
+      twoplus_microbes = sum(TwoPlus), 
+      total_rows = length(Dataset)
+    )
+}
+
+microbes_perseed <- mydata_byloc %>%
+  group_by(sampling_effort_location) %>%
+  summary_data 
+
+microbes_perseed_percent <- microbes_perseed %>%
+  mutate(zero_microbe = zero_microbe/total_rows,
+         one_microbe = one_microbe/total_rows,
+         twoplus_microbes = twoplus_microbes/total_rows) %>%
+  select(!total_rows)
+
+microbes_perseed
+microbes_perseed_percent 
+
+#### Number of fungi and bacteria that were isolated and cooccured together in the same seed (Oregon 2017, Idaho 2017 and 2018) ####
+fun_bac <- function(data){
+  data %>%
+    summarise(
+      fun = sum(Fungus),
+      bac = sum(Bacteria),
+      cooccur = sum(Fungus == 1 & Bacteria == 1),
+      total_rows = length(Dataset)
+    )
+}
+
+fun_bac_total <- mydata_byloc %>%
+  group_by(sampling_effort_location) %>%
+  fun_bac
+
+fun_bac_percent <- fun_bac_total %>%
+  mutate(fun = fun/total_rows,
+         bac = bac/total_rows,
+         cooccur = cooccur/total_rows) %>%
+  select(!total_rows)
+
+fun_bac_total
+fun_bac_percent 
+
+#### Morphologically identified fungi (Idaho 2017 and 2018) ####
+
+fun_morph<- function(data){
+  data %>%
+    summarise(
+      Clad = sum(Clad),
+      Alt = sum(Alt),
+      Aureo = sum(Aureo),
+      Epi = sum(Epicoccum),
+      Other = sum(Other_fungi)
+    )
+}
+
+fun_total <- mydata_byloc %>%
+  group_by(sampling_effort_location) %>%
+  fun_morph() %>%
+  filter(!grepl('Oregon2017', sampling_effort_location)) %>%
+  rowwise %>%
+  mutate(fungi_total = sum(c_across(Clad:Other), na.rm=TRUE))
+
+fun_percent <- fun_total %>%
+  mutate(Clad = Clad/fungi_total,
+         Alt = Alt/fungi_total,
+         Aureo = Aureo/fungi_total,
+         Epi = Epi/fungi_total,
+         Other = Other/fungi_total) %>%
+  select(!fungi_total)
+
+fun_total
+fun_percent
+
+
+#### Morphologically identified bacteria (Idaho 2017 and 2018) - No bacteria were isolated in Oregon 2017 ####
+bac_morph<- function(data){
+  data %>%
+    summarise(
+      Pseudo = sum(Pseudo),
+      Other = sum(Other.Bacteria),
+    )
+}
+
+bac_total <- mydata %>%
+  group_by(Dataset) %>%
+  bac_morph() %>%
+  filter(!grepl('Oregon2017', Dataset)) %>%
+  rowwise %>%
+  mutate(bac_total = sum(c_across(Pseudo:Other), na.rm=TRUE))
+
+bac_percent <- bac_total %>%
+  mutate(Pseudo = Pseudo/bac_total,
+         Other = Other/bac_total) %>%
+  select(!bac_total)
+
+#### There is an association between fungi and bacteria co-occuring in the same seed (Idaho 2018) ####
+
+# Create new column with number of microbes
+Idaho2018 %<>%
+  mutate(num_microbes = rowSums(.[10:11]))
+
+# Create dataframe with seeds that only contains two microbes
+microbesis2 <- Idaho2018 %>%
+  filter(num_microbes == 2) %>%
+  select(Bacteria, Fungus)
+
+## 1 fungi + 1 bacteria = 60/76
+microbesis2 %>%
+  filter(Bacteria == 1 & Fungus == 1) %>%
+  count()
+
+## 2 bac = 5/76
+microbesis2  %>%
+  filter(Bacteria == 2) %>%
+  count()
+
+## 2 fungi = 11/76
+microbesis2  %>%
+  filter(Fungus == 2) %>%
+  count()
+
+## chi-square
+
+obsfreq <- c(11, 5, 60)
+nullprobs <- c(.333, .333, .334)
+chisq.test(obsfreq, p = nullprobs) #X-squared = 71.591, df = 2, p-value = 2.846e-16
+
+#### Pseudomonas and fungi co-occurance (Idaho 2017 and 2018) ####
+
+#Stats: X2 except Fisher's test with Aureobasidium bc it violated assumptions that each cell needed >10 for expected values 
+
+## ANY FUNGUS - no significant association
+
+Fungus.assoc <- as.tibble(Idaho2017) %>%
+  select(Fungus, Pseudo)
+
+Fungus.assoc$Fungus[Fungus.assoc$Fungus == 2] <- 1
+
+Fungus_table <- with(Fungus.assoc, table(Fungus, Pseudo))
+
+print(Fungus_table)
+
+chisq.test(Fungus_table, correct=FALSE) #X-squared = 5.2527, df = 1, p-value = 0.02191
+
+### Aureobasidium - Fisher's exact
+
+Aureo.assoc <- as.tibble(Idaho2018) %>%
+  select(Aureo, Pseudo)
+
+Aureo_table <- with(Aureo.assoc, table(Aureo, Pseudo))
+print(Aureo_table)
+chisq.test(Aureo_table)$expected 
+fisher.test(Aureo_table) #p-value = 0.003801
+
+
+### Cladosporium 
+
+Clad.assoc <- as.tibble(Idaho2018) %>%
+  select(Clad, Pseudo)
+
+Clad_table <- with(Clad.assoc, table(Clad, Pseudo))
+print(Clad_table)
+chisq.test(Clad_table, correct=FALSE) #X-squared = 0.046067, df = 1, p-value = 0.8301
+
+###Epicoccum - Not morphologically identified in Idaho 2017
+
+Epi.assoc <- as.tibble(Idaho2018) %>%
+  select(Epicoccum, Pseudo)
+
+Epi_table <- with(Epi.assoc, table(Epicoccum, Pseudo))
+Epi_table
+chisq.test(Epi_table, correct = FALSE) 
+#X-squared = 11.238, df = 1, p-value = 0.0008012
+
+
+###Alternaria 
+
+Alt.assoc <- as.tibble(Idaho2018) %>%
+  select(Alt, Pseudo)
+
+Alt_table <- with(Alt.assoc, table(Alt, Pseudo))
+print(Alt_table)
+chisq.test(Alt_table, correct=FALSE) #X-squared = 5.6906, df = 1, p-value = 0.01706
+
+
+#### Pseudomonas and seedling mortality association (Idaho 2017 and 2018) ####
+pseudo_mort <- function(dataset){
+  mort <- as.tibble(dataset) %>%
+    select(Pseudo, Mort)
+  
+  mort_table <- with(mort, table(Pseudo, Mort))
+  
+  print(mort_table)
+  
+  chisq.test(mort_table, correct=FALSE)
+}
+
+pseudo_mort(Idaho2017) # X-squared = 379.71, df = 1, p-value < 2.2e-16
+pseudo_mort(Idaho2018) #X-squared = 307.66, df = 1, p-value < 2.2e-16
+
+
+#### Inoculation experiment ####
+pseudo_inoc <- read.csv("data/pseudo_inoc_data.csv")
+
+# Mean (proportion)
+pseudo_inoc %>%
+  select(Treatment, Germ_6_20, Mort_6_20) %>%
+  group_by(Treatment) %>%
+  summarise(mean_germ = mean(Germ_6_20),
+            mean_mort = mean(Mort_6_20),)
+
+#Stats: X2 
+
+## Germination -significant
+germ <- as.tibble(pseudo_inoc) %>%
+  select(Germ_6_20, Treatment)
+
+germ_table <- with(germ, table(Germ_6_20, Treatment))
+
+print(germ_table)
+
+chisq.test(germ_table, correct=FALSE) #X-squared = 16.639, df = 1, p-value = 4.522e-05
+
+# Seedling mortality - significant
+
+mort <- as.tibble(pseudo_inoc) %>%
+  select(Mort_6_20, Treatment)
+
+mort_table <- with(mort, table(Mort_6_20, Treatment))
+
+print(mort_table)
+
+chisq.test(mort_table, correct=FALSE) #X-squared = 9.715, df = 1, p-value = 0.001828
+
+
+#### Figure 1 - Map of sampling locations and native range of P. trichocarpa ####
+pal.region <- c("#fb832d","#016392","#E7298A")
+
+garden.coords <- data.frame(Labs=c("Westport, OR","Moscow, ID", "Clearwater River, ID"),
+                            Latitude=c(46.1326, 46.7324, 46.6776),
+                            Longitude=c(-123.3748, -117.0002, -115.5620),
+                            Year=c("2017","2017 and 2018", "2018"))
+
+#Register API
+#register_google(key = "your_API_key_here")
+
+#make map
+
+(map <- 
+    get_map(location=c(left=-123.98,bottom=44,right=-112.29,top=50),
+            zoom=7, maptype = "watercolor",source="osm",force=F) %>%
+    ggmap()+
+    #geom_point(data=garden.coords,aes(x=Longitude,y=Latitude, fill = Year, shape=Year), solid=FALSE)+
+    geom_point(data=garden.coords,inherit.aes = F,aes(x=Longitude,y=Latitude, fill = Year, shape = Year),size=5,
+               show.legend = T)+
+    geom_label_repel(data=garden.coords,inherit.aes = F,aes(x=Longitude,y=Latitude,label=Labs),
+                     point.padding = 0.5,box.padding = 0.6,size=5)+
+    scale_fill_manual(values=pal.region)+
+    scale_shape_manual(values=c(23,21, 22))+
+    labs(x="Longitude",y="Latitude")+
+    ggsn::scalebar(x.min = -116, x.max = -113.2, 
+                   y.min = 44.5, y.max = 45, dist = 100, dist_unit = "km", model = "WGS84", transform = TRUE, height = 0.3, 
+                   st.dist = 0.5,  st.size = 3)+
+    # theme_map()+
+    theme())
+
+
+
+#add inset figure
+ggdraw()+
+  draw_plot(map)+
+  draw_image("data/range_map_inset.png",scale=1,width=0.25,x=0.59,y=0.28)
+
+
+
+#save to file
+#ggsave("figs/map_with_legend.jpg",width=20,height=16,units="cm")
+ggsave("figs/fig1.tiff",width=10,height=7,units="in", device='tiff', dpi=300)
+
+
+#### Figure 2 - Relative abundance of sequenced fungi from Oregon 2017 and Idaho 2018 ####
+rel <- read.csv("data/rel_ab_OR2017_ID2018.csv")
+
+rel2 <- rel %>%
+  group_by(Fungal_isolate, Sampling_effort) %>%
+  count()
+
+#relative abundance of each isolate for trees east and west of cascades to show overlap, # of isolates 
+ggplot(rel2, aes(x = reorder(Sampling_effort, -n), y=n, fill=Fungal_isolate)) +
+  geom_bar(position="fill", stat = "identity") +
+  theme_bw() +
+  ylab("Relative Abundance") + labs(fill = "Fungal genus") +
+  theme(axis.title.x = element_blank()) +
+  scale_fill_manual(values=as.vector(cols25(15))) + 
+  guides(fill=guide_legend(ncol = 2))
+
+ggsave("figs/fig2.tiff", height = 4, width = 7, units="in", device='tiff', dpi=300)
+
+#### Figure 3 - Isolation frequency of Pseudomonas (Idaho 2018) ####
+pseudo_prop <- Idaho2018 %>%
+  group_by(Tree, Location) %>%
+  summarise(Pseudo = mean(Pseudo))
+
+pseudo_prop 
+ggplot(data = pseudo_prop) +
+  geom_col(mapping = aes(x = reorder(Tree, Pseudo, FUN = median), y = Pseudo, fill = Location)) +
+  scale_fill_manual(name = "Sampling Location", labels = c("Clearwater, ID", "Moscow, ID"), values = c("red2", "dodgerblue2")) +
+  coord_flip() +
+  scale_x_discrete(name = "Tree Identity") +
+  ylab(expression(paste("Isolation frequency of", italic(" Pseudomonas"), "spp."))) +
+  theme_bw()
+
+ggsave("figs/fig3.tiff", width=7,height=5,units="in", device='tiff', dpi=300)
+

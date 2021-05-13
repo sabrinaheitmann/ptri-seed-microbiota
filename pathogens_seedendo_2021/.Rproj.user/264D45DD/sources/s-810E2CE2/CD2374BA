@@ -1,0 +1,33 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1620086482010.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "CD2374BA",
+    "lastKnownWriteTime" : 2053573246240,
+    "last_content_update" : 1620086482010,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "304BEE95",
+        "caption" : "Oregon2017",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=Oregon2017&cache_key=304BEE95",
+        "displayedObservations" : 800,
+        "environment" : "",
+        "expression" : "Oregon2017",
+        "object" : "Oregon2017",
+        "preview" : 0,
+        "totalObservations" : 800,
+        "variables" : 18
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 15,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
